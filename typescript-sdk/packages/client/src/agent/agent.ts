@@ -11,6 +11,7 @@ import { verifyEvents } from "@/verify";
 import { convertToLegacyEvents } from "@/legacy/convert";
 import { LegacyRuntimeProtocolEvent } from "@/legacy/types";
 import { lastValueFrom, of } from "rxjs";
+import { transformChunks } from "@/chunks";
 
 export abstract class AbstractAgent {
   public agentId?: string;
@@ -35,6 +36,7 @@ export abstract class AbstractAgent {
 
     const pipeline = pipe(
       () => this.run(input),
+      transformChunks,
       verifyEvents,
       (source$) => this.apply(input, source$),
       (source$) => this.processApplyEvents(input, source$),

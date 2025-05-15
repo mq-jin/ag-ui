@@ -22,7 +22,7 @@ interface ToolCallFields {
   parentMessageId?: string;
 }
 
-export const convertChunks = (events$: Observable<BaseEvent>): Observable<BaseEvent> => {
+export const transformChunks = (events$: Observable<BaseEvent>): Observable<BaseEvent> => {
   let textMessageFields: TextMessageFields | undefined;
   let toolCallFields: ToolCallFields | undefined;
   let mode: "text" | "tool" | undefined;
