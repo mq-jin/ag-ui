@@ -96,6 +96,7 @@ describe("AbstractAgent.legacy_to_be_removed_runAgentBridged", () => {
     const agent = new TestAgent({
       threadId: "test-thread-id",
       agentId: "test-agent-id",
+      debug: true,
     });
 
     // Get the observable that emits legacy events
@@ -240,6 +241,7 @@ describe("AbstractAgent.legacy_to_be_removed_runAgentBridged", () => {
     const agent = new ChunkTestAgent({
       threadId: "test-thread-id",
       agentId: "test-agent-id",
+      debug: true,
     });
 
     // Get the observable that emits legacy events
