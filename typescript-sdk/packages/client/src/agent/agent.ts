@@ -112,6 +112,7 @@ export abstract class AbstractAgent {
     const input = this.prepareRunAgentInput(config);
 
     return this.run(input).pipe(
+      transformChunks,
       verifyEvents,
       convertToLegacyEvents(this.threadId, input.runId, this.agentId),
     );
