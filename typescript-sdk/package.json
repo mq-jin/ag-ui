@@ -12,8 +12,8 @@
     "test": "turbo run test",
     "bump": "pnpm --filter './packages/*' exec -- pnpm version",
     "bump:alpha": "pnpm --filter './packages/*' exec -- pnpm version --preid alpha",
-    "publish": "pnpm -r clean && pnpm install && turbo run build --filter=./packages/* && pnpm publish -r --filter=./packages/*",
-    "publish:alpha": "pnpm -r clean && pnpm install && turbo run build --filter=./packages/* && pnpm publish -r --filter=./packages/* --preid alpha"
+    "publish": "pnpm -r clean && pnpm install && turbo run build && pnpm publish -r --filter='./packages/*'",
+    "publish:alpha": "pnpm -r clean && pnpm install && turbo run build && pnpm publish -r --filter='./packages/*' --tag alpha --dry-run"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
