@@ -1,4 +1,4 @@
-import { mergeMap, Observable } from "rxjs";
+import { mergeMap, Observable, finalize } from "rxjs";
 import {
   BaseEvent,
   TextMessageChunkEvent,
@@ -172,6 +172,10 @@ export const transformChunks = (events$: Observable<BaseEvent>): Observable<Base
           return toolMessageResult;
       }
       const _exhaustiveCheck: never = event.type;
+    }),
+    finalize(() => {
+      // This ensures that we close any pending events when the source observable completes
+      return closePendingEvent();
     }),
   );
 };
