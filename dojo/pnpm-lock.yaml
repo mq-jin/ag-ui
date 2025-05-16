@@ -9,17 +9,17 @@ importers:
   .:
     dependencies:
       '@ag-ui/client':
-        specifier: 0.0.28-alpha.0
-        version: 0.0.28-alpha.0
+        specifier: 0.0.28-alpha.3
+        version: 0.0.28-alpha.3
       '@ag-ui/core':
-        specifier: 0.0.28-alpha.0
-        version: 0.0.28-alpha.0
+        specifier: 0.0.28-alpha.3
+        version: 0.0.28-alpha.3
       '@ag-ui/encoder':
-        specifier: 0.0.28-alpha.0
-        version: 0.0.28-alpha.0
+        specifier: 0.0.28-alpha.3
+        version: 0.0.28-alpha.3
       '@ag-ui/proto':
-        specifier: 0.0.28-alpha.0
-        version: 0.0.28-alpha.0
+        specifier: 0.0.28-alpha.3
+        version: 0.0.28-alpha.3
       '@copilotkit/react-core':
         specifier: 0.0.0-mme-ag-ui-0-0-28-alpha-0-20250516114853
         version: 0.0.0-mme-ag-ui-0-0-28-alpha-0-20250516114853(@types/react@19.1.4)(graphql@16.11.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -182,26 +182,14 @@ packages:
       graphql:
         optional: true
 
-  '@ag-ui/client@0.0.28-alpha.0':
-    resolution: {integrity: sha512-gnzuqdKg9KNtVOarxskV/CKic2k/DMGWJsr8iEw/ir/bY1K+RpEMoOw7Ugp8mg2KPYGuqG1oIej+NrsKGj46Cg==}
-
   '@ag-ui/client@0.0.28-alpha.3':
     resolution: {integrity: sha512-4oefNX9RlCx1Lb7Hy4smUYDZHu3i2BgIEOxs2zBAUvDR6OZvbQ1TCAz72E6i8y08QsizVU8Hp06uLgwMRCdfiw==}
-
-  '@ag-ui/core@0.0.28-alpha.0':
-    resolution: {integrity: sha512-BPp9OgeGdxtg8g2WEhg8pqDAIwHrI2TvylTJ0Ip18t9WdhyHHTATXRip7GdccCqPOxVSvxT4FJn2D1cY1NkQqg==}
 
   '@ag-ui/core@0.0.28-alpha.3':
     resolution: {integrity: sha512-NNFpoRyXvgK45bB/QOKans/I89wiaN79TNQvx6D2IHkw8uvyJyae/SydEe2F71QkBGGul3NUdBdAM58uFAPKoQ==}
 
-  '@ag-ui/encoder@0.0.28-alpha.0':
-    resolution: {integrity: sha512-DI+e/bUt6ntsjzKBxwfgvnZFK7ZGDt/xWKRHJMqK4IdNZ2dE6ytK28sySD/+7+Jkv4kdY1wutEzA9dHPGa9gnw==}
-
   '@ag-ui/encoder@0.0.28-alpha.3':
     resolution: {integrity: sha512-CHtcAr2jnQrd1gufSVlWiLKdjlXHZJQhF9Q5tU4Q8Rd30S0px2Kq1gfY7PJIGZYSnz9imRGjMdkCuyN3MqKquA==}
-
-  '@ag-ui/proto@0.0.28-alpha.0':
-    resolution: {integrity: sha512-Z3oLIFgBoCjZnh/CSK5p93zKycIwYNiJEeCKgpyCramIXm8mWDcXxo87FCvwTY6hwIEu2ZzlQR8J8hPUoJ3b4Q==}
 
   '@ag-ui/proto@0.0.28-alpha.3':
     resolution: {integrity: sha512-8xY/pIRyx1sQKkU9EXPZ6ycZHxUfmpITHwwlXBh4sR1+czcCcxACqNIVJTTnBHOXFRIxAcqgwXtfJ9/m6UcK3A==}
@@ -5090,18 +5078,6 @@ snapshots:
     optionalDependencies:
       graphql: 16.11.0
 
-  '@ag-ui/client@0.0.28-alpha.0':
-    dependencies:
-      '@ag-ui/core': 0.0.28-alpha.0
-      '@ag-ui/encoder': 0.0.28-alpha.0
-      '@ag-ui/proto': 0.0.28-alpha.0
-      '@types/uuid': 10.0.0
-      fast-json-patch: 3.1.1
-      rxjs: 7.8.1
-      untruncate-json: 0.0.1
-      uuid: 11.1.0
-      zod: 3.24.4
-
   '@ag-ui/client@0.0.28-alpha.3':
     dependencies:
       '@ag-ui/core': 0.0.28-alpha.3
@@ -5114,30 +5090,15 @@ snapshots:
       uuid: 11.1.0
       zod: 3.24.4
 
-  '@ag-ui/core@0.0.28-alpha.0':
-    dependencies:
-      rxjs: 7.8.1
-      zod: 3.24.4
-
   '@ag-ui/core@0.0.28-alpha.3':
     dependencies:
       rxjs: 7.8.1
       zod: 3.24.4
 
-  '@ag-ui/encoder@0.0.28-alpha.0':
-    dependencies:
-      '@ag-ui/core': 0.0.28-alpha.0
-      '@ag-ui/proto': 0.0.28-alpha.0
-
   '@ag-ui/encoder@0.0.28-alpha.3':
     dependencies:
       '@ag-ui/core': 0.0.28-alpha.3
       '@ag-ui/proto': 0.0.28-alpha.3
-
-  '@ag-ui/proto@0.0.28-alpha.0':
-    dependencies:
-      '@ag-ui/core': 0.0.28-alpha.0
-      '@bufbuild/protobuf': 2.4.0
 
   '@ag-ui/proto@0.0.28-alpha.3':
     dependencies:
