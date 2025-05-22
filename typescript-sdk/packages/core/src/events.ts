@@ -10,6 +10,7 @@ export enum EventType {
   TOOL_CALL_ARGS = "TOOL_CALL_ARGS",
   TOOL_CALL_END = "TOOL_CALL_END",
   TOOL_CALL_CHUNK = "TOOL_CALL_CHUNK",
+  TOOL_CALL_RESULT = "TOOL_CALL_RESULT",
   STATE_SNAPSHOT = "STATE_SNAPSHOT",
   STATE_DELTA = "STATE_DELTA",
   MESSAGES_SNAPSHOT = "MESSAGES_SNAPSHOT",
@@ -98,6 +99,12 @@ export const ToolCallEndEventSchema = BaseEventSchema.extend({
   toolCallId: z.string(),
 });
 
+export const ToolCallResultEventSchema = BaseEventSchema.extend({
+  type: z.literal(EventType.TOOL_CALL_RESULT),
+  toolCallId: z.string(),
+  result: z.string(),
+});
+
 export const ToolCallChunkEventSchema = BaseEventSchema.extend({
   type: z.literal(EventType.TOOL_CALL_CHUNK),
   toolCallId: z.string().optional(),
@@ -170,6 +177,7 @@ export const EventSchemas = z.discriminatedUnion("type", [
   ToolCallArgsEventSchema,
   ToolCallEndEventSchema,
   ToolCallChunkEventSchema,
+  ToolCallResultEventSchema,
   StateSnapshotEventSchema,
   StateDeltaEventSchema,
   MessagesSnapshotEventSchema,
@@ -191,6 +199,7 @@ export type ToolCallStartEvent = z.infer<typeof ToolCallStartEventSchema>;
 export type ToolCallArgsEvent = z.infer<typeof ToolCallArgsEventSchema>;
 export type ToolCallEndEvent = z.infer<typeof ToolCallEndEventSchema>;
 export type ToolCallChunkEvent = z.infer<typeof ToolCallChunkEventSchema>;
+export type ToolCallResultEvent = z.infer<typeof ToolCallResultEventSchema>;
 export type StateSnapshotEvent = z.infer<typeof StateSnapshotEventSchema>;
 export type StateDeltaEvent = z.infer<typeof StateDeltaEventSchema>;
 export type MessagesSnapshotEvent = z.infer<typeof MessagesSnapshotEventSchema>;

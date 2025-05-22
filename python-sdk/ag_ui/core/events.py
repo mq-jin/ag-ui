@@ -21,6 +21,7 @@ class EventType(str, Enum):
     TOOL_CALL_ARGS = "TOOL_CALL_ARGS"
     TOOL_CALL_END = "TOOL_CALL_END"
     TOOL_CALL_CHUNK = "TOOL_CALL_CHUNK"
+    TOOL_CALL_RESULT = "TOOL_CALL_RESULT"
     STATE_SNAPSHOT = "STATE_SNAPSHOT"
     STATE_DELTA = "STATE_DELTA"
     MESSAGES_SNAPSHOT = "MESSAGES_SNAPSHOT"
@@ -115,6 +116,14 @@ class ToolCallChunkEvent(BaseEvent):
     tool_call_name: Optional[str] = None
     parent_message_id: Optional[str] = None
     delta: Optional[str] = None
+
+class ToolCallResultEvent(BaseEvent):
+    """
+    Event containing the result of a tool call.
+    """
+    type: Literal[EventType.TOOL_CALL_RESULT]
+    tool_call_id: str
+    result: str
 
 class StateSnapshotEvent(BaseEvent):
     """
@@ -211,6 +220,7 @@ Event = Annotated[
         ToolCallArgsEvent,
         ToolCallEndEvent,
         ToolCallChunkEvent,
+        ToolCallResultEvent,
         StateSnapshotEvent,
         StateDeltaEvent,
         MessagesSnapshotEvent,
