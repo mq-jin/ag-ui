@@ -1,6 +1,6 @@
 # Contributing to AG-UI
 
-Thanks for your interest in improving **AG-UI**! 
+Thanks for your interest in improving **AG-UI**!
 
 This short guide shows the fastest way to get your idea merged.
 
@@ -20,7 +20,7 @@ Early feedback keeps everyone aligned and saves re-work.
 
 ## 2. Join a Bi-Weekly Working Group
 
-Meet the team and potential collaborators in our [bi-weekly community call](https://lu.ma/calendar/manage/cal-DBw2gK428IQbiSO). 
+Meet the team and potential collaborators in our [bi-weekly community call](https://lu.ma/calendar/manage/cal-DBw2gK428IQbiSO).
 
 ---
 
@@ -35,10 +35,11 @@ Need a quick sync?
 
 ## 4. Useful Resources & Docs
 
-| Resource | Link |
-|------|------|
-| Dojo reference implementation | <https://github.com/ag-ui-protocol/ag-ui/tree/main/dojo> |
-
+| Resource                                  | Link                                                     |
+| ----------------------------------------- | -------------------------------------------------------- |
+| Learn how to connect to AG-UI with JS     | <https://docs.ag-ui.com/quickstart/connect>              |
+| Learn how to connect to AG-UI with Python | <https://docs.ag-ui.com/quickstart/build>                |
+| Dojo reference implementation             | <https://github.com/ag-ui-protocol/ag-ui/tree/main/dojo> |
 
 ---
 
