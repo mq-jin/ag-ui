@@ -29,6 +29,9 @@ importers:
       '@ag-ui/encoder':
         specifier: workspace:*
         version: link:../../packages/encoder
+      '@ag-ui/mastra':
+        specifier: workspace:*
+        version: link:../../integrations/mastra
       '@ag-ui/proto':
         specifier: workspace:*
         version: link:../../packages/proto
@@ -50,6 +53,9 @@ importers:
       '@copilotkit/shared':
         specifier: 1.8.12
         version: 1.8.12
+      '@mastra/client-js':
+        specifier: ^0.10.1
+        version: 0.10.1(@mastra/core@0.10.1(@sinclair/typebox@0.27.8)(openapi-types@12.1.3)(react@19.1.0)(zod@3.25.17))(zod@3.25.17)
       '@mdx-js/loader':
         specifier: ^3.1.0
         version: 3.1.0(acorn@8.14.1)
@@ -1773,6 +1779,12 @@ packages:
   '@lukeed/uuid@2.0.1':
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
+
+  '@mastra/client-js@0.10.1':
+    resolution: {integrity: sha512-oMJiQnyjW9VNnG7AT9lKG9/Q1y4HlBvsdE1Tso9U9h2onFLPWpMSY1dLleovJGygt2figYJbobgYaNCoGYqXhg==}
+    peerDependencies:
+      '@mastra/core': ^0.10.0
+      zod: ^3.0.0
 
   '@mastra/core@0.10.1':
     resolution: {integrity: sha512-m+W5i1AKRmWi2E6AoW99OtTIstvSgCFCgc0jE4oN915sDBCwIJ0pzZK/7jVk3BVo1z9t8RbHrW3fpUyfA7OFJQ==}
@@ -9620,6 +9632,16 @@ snapshots:
   '@lukeed/uuid@2.0.1':
     dependencies:
       '@lukeed/csprng': 1.1.0
+
+  '@mastra/client-js@0.10.1(@mastra/core@0.10.1(@sinclair/typebox@0.27.8)(openapi-types@12.1.3)(react@19.1.0)(zod@3.25.17))(zod@3.25.17)':
+    dependencies:
+      '@ag-ui/client': 0.0.27
+      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.17)
+      '@mastra/core': 0.10.1(@sinclair/typebox@0.27.8)(openapi-types@12.1.3)(react@19.1.0)(zod@3.25.17)
+      json-schema: 0.4.0
+      rxjs: 7.8.1
+      zod: 3.25.17
+      zod-to-json-schema: 3.24.5(zod@3.25.17)
 
   '@mastra/core@0.10.1(@sinclair/typebox@0.27.8)(openapi-types@12.1.3)(react@19.1.0)(zod@3.25.17)':
     dependencies:
