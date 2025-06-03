@@ -74,7 +74,7 @@ export class MastraAgent extends AbstractAgent {
         acc[agentId] = new MastraAgent({
           agentId,
           agent,
-          resourceId: resourceId ?? randomUUID(),
+          resourceId,
         });
 
         return acc;
@@ -100,7 +100,7 @@ export class MastraAgent extends AbstractAgent {
         acc[network.name!] = new MastraAgent({
           agentId: network.name!,
           agent: network as unknown as LocalMastraAgent,
-          resourceId: resourceId ?? randomUUID(),
+          resourceId,
           runtimeContext,
         });
         return acc;
@@ -299,7 +299,7 @@ export class MastraAgent extends AbstractAgent {
       },
       {} as Record<string, any>,
     );
-    const resourceId = this.resourceId ?? "";
+    const resourceId = this.resourceId ?? threadId;
     const convertedMessages = convertAGUIMessagesToMastra(messages);
     const runtimeContext = this.runtimeContext;
 
