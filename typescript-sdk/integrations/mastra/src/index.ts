@@ -24,156 +24,339 @@ import {
 import { processDataStream } from "@ai-sdk/ui-utils";
 import type { CoreMessage, Mastra } from "@mastra/core";
 import { registerApiRoute } from "@mastra/core/server";
-import type { Agent } from "@mastra/core/agent";
+import type { Agent as LocalMastraAgent } from "@mastra/core/agent";
 import type { Context } from "hono";
 import { RuntimeContext } from "@mastra/core/runtime-context";
 import { randomUUID } from "crypto";
 import { Observable } from "rxjs";
+import { MastraClient } from "@mastra/client-js";
+type RemoteMastraAgent = ReturnType<MastraClient["getAgent"]>;
 
-interface MastraAgentConfig extends AgentConfig {
-  agent: Agent;
-  agentId: string;
+export interface MastraAgentConfig extends AgentConfig {
+  agent: LocalMastraAgent | RemoteMastraAgent;
   resourceId?: string;
   runtimeContext?: RuntimeContext;
 }
 
-export class AGUIAdapter extends AbstractAgent {
-  agent: Agent;
+interface MastraAgentStreamOptions {
+  onTextPart?: (text: string) => void;
+  onFinishMessagePart?: () => void;
+  onToolCallPart?: (streamPart: { toolCallId: string; toolName: string; args: any }) => void;
+  onToolResultPart?: (streamPart: { toolCallId: string; result: any }) => void;
+  onError?: (error: Error) => void;
+}
+
+export class MastraAgent extends AbstractAgent {
+  agent: LocalMastraAgent | RemoteMastraAgent;
   resourceId?: string;
   runtimeContext?: RuntimeContext;
-  constructor({ agent, agentId, resourceId, runtimeContext, ...rest }: MastraAgentConfig) {
-    super({
-      agentId,
-      ...rest,
-    });
+
+  constructor({ agent, resourceId, runtimeContext, ...rest }: MastraAgentConfig) {
+    super(rest);
     this.agent = agent;
     this.resourceId = resourceId;
     this.runtimeContext = runtimeContext;
   }
 
+  static async getRemoteAgents({
+    mastraClient,
+    resourceId,
+  }: {
+    mastraClient: MastraClient;
+    resourceId?: string;
+  }): Promise<Record<string, AbstractAgent>> {
+    const agents = await mastraClient.getAgents();
+
+    return Object.entries(agents).reduce(
+      (acc, [agentId]) => {
+        const agent = mastraClient.getAgent(agentId);
+
+        acc[agentId] = new MastraAgent({
+          agentId,
+          agent,
+          resourceId: resourceId ?? randomUUID(),
+        });
+
+        return acc;
+      },
+      {} as Record<string, AbstractAgent>,
+    );
+  }
+
+  static getLocalAgents({
+    mastra,
+    resourceId,
+    runtimeContext,
+  }: {
+    mastra: Mastra;
+    resourceId?: string;
+    runtimeContext?: RuntimeContext;
+  }): Record<string, AbstractAgent> {
+    const agents = mastra.getAgents() || {};
+    const networks = mastra.getNetworks() || [];
+
+    const networkAGUI = networks.reduce(
+      (acc, network) => {
+        acc[network.name!] = new MastraAgent({
+          agentId: network.name!,
+          agent: network as unknown as LocalMastraAgent,
+          resourceId: resourceId ?? randomUUID(),
+          runtimeContext,
+        });
+        return acc;
+      },
+      {} as Record<string, AbstractAgent>,
+    );
+
+    const agentAGUI = Object.entries(agents).reduce(
+      (acc, [agentId, agent]) => {
+        acc[agentId] = new MastraAgent({
+          agentId,
+          agent,
+          resourceId,
+          runtimeContext,
+        });
+        return acc;
+      },
+      {} as Record<string, AbstractAgent>,
+    );
+
+    return {
+      ...agentAGUI,
+      ...networkAGUI,
+    };
+  }
+
+  static getLocalAgent({
+    mastra,
+    agentId,
+    resourceId,
+    runtimeContext,
+  }: {
+    mastra: Mastra;
+    agentId: string;
+    resourceId?: string;
+    runtimeContext?: RuntimeContext;
+  }) {
+    const agent = mastra.getAgent(agentId);
+    if (!agent) {
+      throw new Error(`Agent ${agentId} not found`);
+    }
+    return new MastraAgent({
+      agentId,
+      agent,
+      resourceId,
+      runtimeContext,
+    }) as AbstractAgent;
+  }
+
+  static getNetwork({
+    mastra,
+    networkId,
+    resourceId,
+    runtimeContext,
+  }: {
+    mastra: Mastra;
+    networkId: string;
+    resourceId?: string;
+    runtimeContext?: RuntimeContext;
+  }) {
+    const network = mastra.getNetwork(networkId);
+    if (!network) {
+      throw new Error(`Network ${networkId} not found`);
+    }
+    return new MastraAgent({
+      agentId: network.name!,
+      agent: network as unknown as LocalMastraAgent,
+      resourceId,
+      runtimeContext,
+    }) as AbstractAgent;
+  }
+
   protected run(input: RunAgentInput): Observable<BaseEvent> {
     const finalMessages: Message[] = [...input.messages];
+    let messageId = randomUUID();
+    let assistantMessage: AssistantMessage = {
+      id: messageId,
+      role: "assistant",
+      content: "",
+      toolCalls: [],
+    };
+    finalMessages.push(assistantMessage);
 
     return new Observable<BaseEvent>((subscriber) => {
-      const convertedMessages = convertMessagesToMastraMessages(input.messages);
       subscriber.next({
         type: EventType.RUN_STARTED,
         threadId: input.threadId,
         runId: input.runId,
       } as RunStartedEvent);
 
-      this.agent
-        .stream(convertedMessages, {
-          threadId: input.threadId,
-          resourceId: this.resourceId ?? "",
-          runId: input.runId,
-          clientTools: input.tools.reduce(
-            (acc, tool) => {
-              acc[tool.name as string] = {
-                id: tool.name,
-                description: tool.description,
-                inputSchema: tool.parameters,
-              };
-              return acc;
-            },
-            {} as Record<string, any>,
-          ),
-          runtimeContext: this.runtimeContext,
-        })
-        .then((response) => {
-          let messageId = randomUUID();
-          let assistantMessage: AssistantMessage = {
-            id: messageId,
+      this.streamMastraAgent(input, {
+        onTextPart: (text) => {
+          assistantMessage.content += text;
+          const event: TextMessageChunkEvent = {
+            type: EventType.TEXT_MESSAGE_CHUNK,
             role: "assistant",
-            content: "",
-            toolCalls: [],
+            messageId,
+            delta: text,
           };
-          finalMessages.push(assistantMessage);
-
-          return processDataStream({
-            stream: response.toDataStreamResponse().body!,
-            onTextPart: (text) => {
-              assistantMessage.content += text;
-              const event: TextMessageChunkEvent = {
-                type: EventType.TEXT_MESSAGE_CHUNK,
-                role: "assistant",
-                messageId,
-                delta: text,
-              };
-              subscriber.next(event);
+          subscriber.next(event);
+        },
+        onToolCallPart: (streamPart) => {
+          let toolCall: ToolCall = {
+            id: streamPart.toolCallId,
+            type: "function",
+            function: {
+              name: streamPart.toolName,
+              arguments: JSON.stringify(streamPart.args),
             },
-            onFinishMessagePart: () => {
-              // Emit message snapshot
-              const event: MessagesSnapshotEvent = {
-                type: EventType.MESSAGES_SNAPSHOT,
-                messages: finalMessages,
-              };
-              subscriber.next(event);
+          };
+          assistantMessage.toolCalls!.push(toolCall);
 
-              // Emit run finished event
-              subscriber.next({
-                type: EventType.RUN_FINISHED,
-                threadId: input.threadId,
-                runId: input.runId,
-              } as RunFinishedEvent);
+          const startEvent: ToolCallStartEvent = {
+            type: EventType.TOOL_CALL_START,
+            parentMessageId: messageId,
+            toolCallId: streamPart.toolCallId,
+            toolCallName: streamPart.toolName,
+          };
+          subscriber.next(startEvent);
 
-              // Complete the observable
-              subscriber.complete();
-            },
-            onToolCallPart(streamPart) {
-              let toolCall: ToolCall = {
-                id: streamPart.toolCallId,
-                type: "function",
-                function: {
-                  name: streamPart.toolName,
-                  arguments: JSON.stringify(streamPart.args),
-                },
-              };
-              assistantMessage.toolCalls!.push(toolCall);
+          const argsEvent: ToolCallArgsEvent = {
+            type: EventType.TOOL_CALL_ARGS,
+            toolCallId: streamPart.toolCallId,
+            delta: JSON.stringify(streamPart.args),
+          };
+          subscriber.next(argsEvent);
 
-              const startEvent: ToolCallStartEvent = {
-                type: EventType.TOOL_CALL_START,
-                parentMessageId: messageId,
-                toolCallId: streamPart.toolCallId,
-                toolCallName: streamPart.toolName,
-              };
-              subscriber.next(startEvent);
+          const endEvent: ToolCallEndEvent = {
+            type: EventType.TOOL_CALL_END,
+            toolCallId: streamPart.toolCallId,
+          };
+          subscriber.next(endEvent);
+        },
+        onToolResultPart(streamPart) {
+          const toolMessage: ToolMessage = {
+            role: "tool",
+            id: randomUUID(),
+            toolCallId: streamPart.toolCallId,
+            content: JSON.stringify(streamPart.result),
+          };
+          finalMessages.push(toolMessage);
+        },
+        onFinishMessagePart: () => {
+          // Emit message snapshot
+          const event: MessagesSnapshotEvent = {
+            type: EventType.MESSAGES_SNAPSHOT,
+            messages: finalMessages,
+          };
+          subscriber.next(event);
 
-              const argsEvent: ToolCallArgsEvent = {
-                type: EventType.TOOL_CALL_ARGS,
-                toolCallId: streamPart.toolCallId,
-                delta: JSON.stringify(streamPart.args),
-              };
-              subscriber.next(argsEvent);
+          // Emit run finished event
+          subscriber.next({
+            type: EventType.RUN_FINISHED,
+            threadId: input.threadId,
+            runId: input.runId,
+          } as RunFinishedEvent);
 
-              const endEvent: ToolCallEndEvent = {
-                type: EventType.TOOL_CALL_END,
-                toolCallId: streamPart.toolCallId,
-              };
-              subscriber.next(endEvent);
-            },
-            onToolResultPart(streamPart) {
-              const toolMessage: ToolMessage = {
-                role: "tool",
-                id: randomUUID(),
-                toolCallId: streamPart.toolCallId,
-                content: JSON.stringify(streamPart.result),
-              };
-              finalMessages.push(toolMessage);
-            },
-          });
-        })
-        .catch((error) => {
+          // Complete the observable
+          subscriber.complete();
+        },
+        onError: (error) => {
           console.error("error", error);
           // Handle error
           subscriber.error(error);
-        });
+        },
+      });
 
       return () => {};
     });
   }
+
+  /**
+   * Streams in process or remote mastra agent.
+   * @param input - The input for the mastra agent.
+   * @param options - The options for the mastra agent.
+   * @returns The stream of the mastra agent.
+   */
+  private streamMastraAgent(
+    { threadId, runId, messages, tools }: RunAgentInput,
+    {
+      onTextPart,
+      onFinishMessagePart,
+      onToolCallPart,
+      onToolResultPart,
+      onError,
+    }: MastraAgentStreamOptions,
+  ) {
+    const clientTools = tools.reduce(
+      (acc, tool) => {
+        acc[tool.name as string] = {
+          id: tool.name,
+          description: tool.description,
+          inputSchema: tool.parameters,
+        };
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
+    const resourceId = this.resourceId ?? "";
+    const convertedMessages = convertAGUIMessagesToMastra(messages);
+    const runtimeContext = this.runtimeContext;
+
+    function isLocalMastraAgent(
+      agent: LocalMastraAgent | RemoteMastraAgent,
+    ): agent is LocalMastraAgent {
+      return "metrics" in agent;
+    }
+
+    if (isLocalMastraAgent(this.agent)) {
+      // in process agent
+      return this.agent
+        .stream(convertedMessages, {
+          threadId,
+          resourceId,
+          runId,
+          clientTools,
+          runtimeContext,
+        })
+        .then((response) => {
+          return processDataStream({
+            stream: (response as any).toDataStreamResponse().body!,
+            onTextPart,
+            onToolCallPart,
+            onToolResultPart,
+            onFinishMessagePart,
+          });
+        })
+        .catch((error) => {
+          onError?.(error);
+        });
+    } else {
+      // remote agent
+      return this.agent
+        .stream({
+          threadId,
+          resourceId,
+          runId,
+          messages: convertedMessages,
+          clientTools,
+        })
+        .then((response) => {
+          return response.processDataStream({
+            onTextPart,
+            onToolCallPart,
+            onToolResultPart,
+            onFinishMessagePart,
+          });
+        })
+        .catch((error) => {
+          onError?.(error);
+        });
+    }
+  }
 }
-export function convertMessagesToMastraMessages(messages: Message[]): CoreMessage[] {
+
+export function convertAGUIMessagesToMastra(messages: Message[]): CoreMessage[] {
   const result: CoreMessage[] = [];
 
   for (const message of messages) {
@@ -225,96 +408,6 @@ export function convertMessagesToMastraMessages(messages: Message[]): CoreMessag
   return result;
 }
 
-export function getAGUI({
-  mastra,
-  resourceId,
-  runtimeContext,
-}: {
-  mastra: Mastra;
-  resourceId?: string;
-  runtimeContext?: RuntimeContext;
-}) {
-  const agents = mastra.getAgents() || {};
-  const networks = mastra.getNetworks() || [];
-
-  const networkAGUI = networks.reduce(
-    (acc, network) => {
-      acc[network.name!] = new AGUIAdapter({
-        agentId: network.name!,
-        agent: network as unknown as Agent,
-        resourceId,
-        runtimeContext,
-      });
-      return acc;
-    },
-    {} as Record<string, AbstractAgent>,
-  );
-
-  const agentAGUI = Object.entries(agents).reduce(
-    (acc, [agentId, agent]) => {
-      acc[agentId] = new AGUIAdapter({
-        agentId,
-        agent,
-        resourceId,
-        runtimeContext,
-      });
-      return acc;
-    },
-    {} as Record<string, AbstractAgent>,
-  );
-
-  return {
-    ...agentAGUI,
-    ...networkAGUI,
-  };
-}
-
-export function getAGUIAgent({
-  mastra,
-  agentId,
-  resourceId,
-  runtimeContext,
-}: {
-  mastra: Mastra;
-  agentId: string;
-  resourceId?: string;
-  runtimeContext?: RuntimeContext;
-}) {
-  const agent = mastra.getAgent(agentId);
-  if (!agent) {
-    throw new Error(`Agent ${agentId} not found`);
-  }
-  return new AGUIAdapter({
-    agentId,
-    agent,
-    resourceId,
-    runtimeContext,
-  }) as AbstractAgent;
-}
-
-export function getAGUINetwork({
-  mastra,
-  networkId,
-  resourceId,
-  runtimeContext,
-}: {
-  mastra: Mastra;
-  networkId: string;
-  resourceId?: string;
-  runtimeContext?: RuntimeContext;
-}) {
-  const network = mastra.getNetwork(networkId);
-  if (!network) {
-    throw new Error(`Network ${networkId} not found`);
-  }
-  return new AGUIAdapter({
-    agentId: network.name!,
-    agent: network as unknown as Agent,
-    resourceId,
-    runtimeContext,
-  }) as AbstractAgent;
-}
-
 export function registerCopilotKit<T extends Record<string, any> | unknown = unknown>({
   path,
   resourceId,
@@ -348,7 +441,7 @@ export function registerCopilotKit<T extends Record<string, any> | unknown = unk
 
       const aguiAgents =
         agents ||
-        getAGUI({
+        MastraAgent.getLocalAgents({
           resourceId,
           mastra,
           runtimeContext,

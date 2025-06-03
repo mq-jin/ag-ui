@@ -1,0 +1,14 @@
+import { MenuIntegrationConfig } from "./types/integration";
+
+export const menuIntegrations: MenuIntegrationConfig[] = [
+  {
+    id: "starter",
+    name: "Starter",
+    features: ["agentic_chat"],
+  },
+  {
+    id: "mastra",
+    name: "Mastra",
+    features: ["agentic_chat"],
+  },
+];
