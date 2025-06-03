@@ -11,4 +11,9 @@ export const menuIntegrations: MenuIntegrationConfig[] = [
     name: "Mastra",
     features: ["agentic_chat"],
   },
+  {
+    id: "vercel-ai-sdk",
+    name: "Vercel AI SDK",
+    features: ["agentic_chat"],
+  },
 ];
