@@ -1,5 +1,6 @@
 import { AgentIntegrationConfig } from "./types/integration";
 import { MiddlewareStarterAgent } from "@ag-ui/middleware-starter";
+import { ServerStarterAgent } from "@ag-ui/server-starter";
 import { MastraClient } from "@mastra/client-js";
 import { MastraAgent } from "@ag-ui/mastra";
 import { VercelAISDKAgent } from "@ag-ui/vercel-ai-sdk";
@@ -11,6 +12,14 @@ export const agentsIntegrations: AgentIntegrationConfig[] = [
     agents: async () => {
       return {
         agentic_chat: new MiddlewareStarterAgent(),
+      };
+    },
+  },
+  {
+    id: "server-starter",
+    agents: async () => {
+      return {
+        agentic_chat: new ServerStarterAgent({ url: "http://localhost:3000/" }),
       };
     },
   },

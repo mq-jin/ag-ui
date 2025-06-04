@@ -7,6 +7,11 @@ export const menuIntegrations: MenuIntegrationConfig[] = [
     features: ["agentic_chat"],
   },
   {
+    id: "server-starter",
+    name: "Server Starter",
+    features: ["agentic_chat"],
+  },
+  {
     id: "mastra",
     name: "Mastra",
     features: ["agentic_chat"],
