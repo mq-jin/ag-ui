@@ -19,7 +19,7 @@ export const agentsIntegrations: AgentIntegrationConfig[] = [
     id: "server-starter",
     agents: async () => {
       return {
-        agentic_chat: new ServerStarterAgent({ url: "http://localhost:3000/" }),
+        agentic_chat: new ServerStarterAgent({ url: "http://localhost:8000/" }),
       };
     },
   },
