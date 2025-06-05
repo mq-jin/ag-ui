@@ -15,10 +15,13 @@ from ag_ui.core import (
     TextMessageStartEvent,
     TextMessageContentEvent,
     TextMessageEndEvent,
+    TextMessageChunkEvent,
     ToolCallStartEvent,
     ToolCallArgsEvent,
-    ToolCallEndEvent
+    ToolCallEndEvent,
+    ToolCallChunkEvent
 )
+
 from ag_ui.encoder import EventEncoder
 
 async def agentic_chat_endpoint(input_data: RunAgentInput, request: Request):
@@ -31,7 +34,6 @@ async def agentic_chat_endpoint(input_data: RunAgentInput, request: Request):
 
     async def event_generator():
         # Get the last message content for conditional logic
-        last_message_content = None
         last_message_role = None
         if input_data.messages and len(input_data.messages) > 0:
             last_message = input_data.messages[-1]
@@ -51,11 +53,8 @@ async def agentic_chat_endpoint(input_data: RunAgentInput, request: Request):
         if last_message_role == "tool":
             async for event in send_tool_result_message_events():
                 yield encoder.encode(event)
-        elif last_message_content == "tool":
-            async for event in send_tool_call_events():
-                yield encoder.encode(event)
         else:
-            async for event in send_text_message_events():
+            async for event in send_event_sequence():
                 yield encoder.encode(event)
 
         # Send run finished event
@@ -73,45 +72,29 @@ async def agentic_chat_endpoint(input_data: RunAgentInput, request: Request):
     )
 
 
-async def send_text_message_events():
+async def send_event_sequence():
     """Send text message events with countdown"""
-    message_id = str(uuid.uuid4())
 
-    # Start of message
-    yield TextMessageStartEvent(
-        type=EventType.TEXT_MESSAGE_START,
-        message_id=message_id,
-        role="assistant"
+    yield TextMessageChunkEvent(
+        type=EventType.TEXT_MESSAGE_CHUNK,
+        message_id="887da36a-69d3-4750-af8a-771b36d76f90",
+        role="assistant",
+        delta="The"
     )
 
-    # Initial content chunk
-    yield TextMessageContentEvent(
-        type=EventType.TEXT_MESSAGE_CONTENT,
-        message_id=message_id,
-        delta="counting down: "
+    yield TextMessageChunkEvent(
+        type=EventType.TEXT_MESSAGE_CHUNK,
+        message_id="887da36a-69d3-4750-af8a-771b36d76f90",
+        role="assistant",
+        delta="..."
     )
 
-    # Countdown from 10 to 1
-    for count in range(10, 0, -1):
-        yield TextMessageContentEvent(
-            type=EventType.TEXT_MESSAGE_CONTENT,
-            message_id=message_id,
-            delta=f"{count}  "
-        )
-        # Sleep for 300ms
-        await asyncio.sleep(0.3)
-
-    # Final checkmark
-    yield TextMessageContentEvent(
-        type=EventType.TEXT_MESSAGE_CONTENT,
-        message_id=message_id,
-        delta="✓"
-    )
-
-    # End of message
-    yield TextMessageEndEvent(
-        type=EventType.TEXT_MESSAGE_END,
-        message_id=message_id
+    yield ToolCallChunkEvent(
+        type=EventType.TOOL_CALL_CHUNK,
+        tool_call_id="call_dfO2loYD6iyxBhJl6zJ2M0pK",
+        tool_call_name="change_background",
+        parent_message_id="887da36a-69d3-4750-af8a-771b36d76f90",
+        delta="{\"background\":\"linear-gradient(to right, blue, pink)\"}"
     )
 
 
