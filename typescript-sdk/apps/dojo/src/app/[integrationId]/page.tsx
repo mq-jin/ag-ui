@@ -4,7 +4,7 @@ import React from "react";
 import { menuIntegrations } from "@/menu";
 import { notFound } from "next/navigation";
 import { descriptions } from "@/descriptions";
-import { MDXContent } from "@/components/ui/mdx-components";
+import { MDXRenderer } from "@/utils/mdx-utils";
 
 interface IntegrationPageProps {
   params: Promise<{
@@ -27,15 +27,19 @@ export default function IntegrationPage({ params }: IntegrationPageProps) {
 
   if (!description) {
     return (
-      <div className="flex-1 h-screen w-full flex flex-col items-center justify-center p-8">
-        <h1 className="text-4xl font-bold text-center">{integration.name}</h1>
-        <p className="text-muted-foreground mt-4">Integration ID: {integration.id}</p>
+      <div className="flex-1 h-screen w-full flex flex-col items-center justify-start pt-16 px-8">
+        <div className="w-full max-w-4xl">
+          <h1 className="text-4xl font-bold text-center">{integration.name}</h1>
+          <p className="text-muted-foreground mt-4 text-center">Integration ID: {integration.id}</p>
+        </div>
       </div>
     );
   } else {
     return (
-      <div className="flex-1 h-screen w-full flex flex-col items-center justify-center p-8">
-        <MDXContent>{description}</MDXContent>
+      <div className="flex-1 h-screen w-full flex flex-col items-center justify-start pt-24 px-8">
+        <div className="w-full max-w-4xl">
+          <MDXRenderer content={description} />
+        </div>
       </div>
     );
   }
