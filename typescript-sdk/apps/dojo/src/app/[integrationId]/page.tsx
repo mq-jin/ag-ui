@@ -1,10 +1,15 @@
-"use client";
-
 import React from "react";
 import { menuIntegrations } from "@/menu";
 import { notFound } from "next/navigation";
-import { descriptions } from "@/descriptions";
-import { MDXRenderer } from "@/utils/mdx-utils";
+import Readme from "@/components/readme/readme";
+import path from "path";
+import fs from "fs";
+
+export async function generateStaticParams() {
+  return menuIntegrations.map((integration) => ({
+    integrationId: integration.id,
+  }));
+}
 
 interface IntegrationPageProps {
   params: Promise<{
@@ -18,14 +23,27 @@ export default function IntegrationPage({ params }: IntegrationPageProps) {
   // Find the integration by ID
   const integration = menuIntegrations.find((integration) => integration.id === integrationId);
 
+  const readmePath = path.join(
+    process.cwd(),
+    "..",
+    "..",
+    "integrations",
+    integrationId,
+    "README.md",
+  );
+
+  let md: string | undefined = undefined;
+
+  if (fs.existsSync(readmePath)) {
+    md = fs.readFileSync(readmePath, "utf8");
+  }
+
   // If integration not found, show 404
   if (!integration) {
     notFound();
   }
 
-  const description = descriptions[integrationId as keyof typeof descriptions];
-
-  if (!description) {
+  if (!md) {
     return (
       <div className="flex-1 h-screen w-full flex flex-col items-center justify-start pt-16 px-8">
         <div className="w-full max-w-4xl">
@@ -35,12 +53,6 @@ export default function IntegrationPage({ params }: IntegrationPageProps) {
       </div>
     );
   } else {
-    return (
-      <div className="flex-1 h-screen w-full flex flex-col items-center justify-start pt-24 px-8">
-        <div className="w-full max-w-4xl">
-          <MDXRenderer content={description} />
-        </div>
-      </div>
-    );
+    return <Readme content={md} />;
   }
 }
